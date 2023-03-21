@@ -1,0 +1,12 @@
+{{!-- Our first template with tokens --}}
+{{> navigation }}
+<h1>{{title}} </h1>
+<div>
+    {{#each messages}}
+        <p>{{text}}</p>
+        <p>{{user}}</p>
+        <p>{{added}}</p>
+    {{/each}}
+</div>
+
+<a href="/new">Add Message</a>
