@@ -8,11 +8,11 @@ router.get('/', function(req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-// router.get('/signup', userController.user_create_get);
-// router.post('/signup', userController.user_create_post);
+router.get('/signup', userController.user_create_get);
+router.post('/signup', userController.user_create_post);
 
-// router.get('/login', userController.user_login_get);
-// router.post('/login', userController.user_login_post);
+router.get('/login', userController.user_login_get);
+router.post('/login', userController.user_login_post);
 
 
 module.exports = router;
