@@ -3,8 +3,9 @@ require("dotenv").config();
 const User = require('../models/user');
 const {body, validationResult} = require ('express-validator');
 const bcrypt = require('bcryptjs');
+const passport = require("passport");
 exports.user_create_get = (req, res, next) => {
-	res.render('signup-form')
+	res.render('signup-form');
     // res.send("NOT IMPLEMENTED: Create User GET");
 }
 
@@ -24,31 +25,22 @@ exports.user_create_post = [
 		.withMessage("Last name must be specified.")
 		.isAlphanumeric()
 		.withMessage("Last name has non-alphanumeric characters."),
-	body("lastName")
+	body("username")
 		.trim()
 		.isLength({ min: 1 })
 		.escape()
-		.withMessage("User name must be specified.")
+		.withMessage("Username must be specified.")
 		.isAlphanumeric()
 		.withMessage("User name has non-alphanumeric characters."),
-		body('password', "Invalid Password").isStrongPassword({
-			minLength: 8,
-			minLowercase: 1,
-			minUppercase: 1,
-			minNumbers: 1,
-			minSymbols: 1,
-			returnScore: false,
-			pointsPerUnique: 1,
-			pointsPerRepeat: 0.5,
-			pointsForContainingLower: 10,
-			pointsForContainingUpper: 10,
-			pointsForContainingNumber: 10,
-			pointsForContainingSymbol: 10,
-		  }),
+	body('password', "Invalid Password"),
 	(req, res, next) => {
 		const errors = validationResult(req);
+		console.log("dddddd");
 
 		if (!errors.isEmpty()) {
+		console.log("dddddd2");
+
+			console.log(errors);
 			res.render("signup-form", {
 				title: "Create User",
 				user: req.body,
@@ -57,18 +49,27 @@ exports.user_create_post = [
 			return;
 		}
 
-		bcrypt.hash(req.body.password, process.env.SALT_ROUND).then((hash) => {
-			const user = new User({
-				firstname: req.body.firstName,
-				lastName: req.body.lastName,
-				userName: req.body.userName,
-				password: hash,
-			});
-			user.save().then((response) => {
-				res.render("index");
-			});
+		const user = new User({
+			firstName: req.body.firstName,
+			lastName: req.body.lastName,
+			username: req.body.username,
+			password: req.body.password,
+			isMember: false,
 		});
+		user.save()
+		.then((response) => {
+			res.render("index");
+		});
+		
 
+		// passport.authenticate('local-signup', {session: false}),
+		// (req, res, next) => {
+		// 	console.log("user saved");
+		// 	console.log(user);
+		// 	res.json({
+		// 		user: req.user,
+		// 	})
+		// }
 		
 	}
 ];

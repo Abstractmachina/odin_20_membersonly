@@ -8,7 +8,7 @@ const UserSchema = new Schema({
     lastName: {type: String, required: true, maxLength: 100},
     username: {type: String, required: true, maxLength: 100},
     isMember: {type: Boolean, required: true},
-    hash: {type: String, required: true, maxLength: 100},
+    password: {type: String, required: true, maxLength: 100},
 });
 
 UserSchema.pre('save', async function(next) {
@@ -17,7 +17,7 @@ UserSchema.pre('save', async function(next) {
         //only need to hash new passwords, so if unmodified, skip.
         if (!user.isModified('password')) next();
         
-        const salt = await bcryptjs.genSalt(process.env.SALT_ROUNDS);
+        const salt = await bcryptjs.genSalt(parseInt(process.env.SALT_ROUNDS));
         const hashedPassword = await bcryptjs.hash(this.password, salt);
 
         this.password = hashedPassword;
@@ -26,6 +26,14 @@ UserSchema.pre('save', async function(next) {
         return next(err);
     }
 });
+
+UserSchema.methods.matchPassword = async function(password) {
+	try {
+		return await bcryptjs.compare(password, this.password);
+	} catch (err) {
+		throw new Error(err);
+	}
+}
 
 UserSchema.virtual("url").get(function() {
     return `/user/${this._id}`;

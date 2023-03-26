@@ -85,15 +85,15 @@ passport.use(
 			User.findOne({username: username})
 			.then((user) => {
 				if (user) return done(null, false);
-				if (!user) {
-					return done(null, false, {message: "Incorrect username" });
-				}
-				if (!isValidPassword(user, password)) {
-					return done(null, false, {message: "Incorrect passwordd" });
-				}
-				return done(null, user); //successful login
+
+				//create new user
+				User.create({username, password })
+				.then((user) => {
+					return done(null, user);
+				});
 			})
 			.catch ((err) => {
+				console.log(err);
 				return done(err);
 			});
 	})
@@ -108,12 +108,16 @@ passport.use(
 				if (!user) {
 					return done(null, false, {message: "Incorrect username" });
 				}
-				if (!isValidPassword(user, password)) {
-					return done(null, false, {message: "Incorrect passwordd" });
-				}
-				return done(null, user); //successful login
+				const isMatch = user.matchPassword(password);
+				isMatch.then(() => {
+					if (!this) {
+						return done(null, false, {message: "Incorrect passwordd" });
+					}
+					return done(null, user);
+				});
 			})
 			.catch ((err) => {
+				console.log(err);
 				return done(err);
 			});
 	})
@@ -163,8 +167,8 @@ const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const loginRouter = require('./routes/login');
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/login', loginRouter);
+// app.use('/users', usersRouter);
+// app.use('/login', loginRouter);
 
 
 
