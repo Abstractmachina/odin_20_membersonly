@@ -1,4 +1,3 @@
-require("dotenv").config();
 
 var createError = require('http-errors');
 var express = require('express');
@@ -7,30 +6,28 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 const xhbs = require("express-handlebars");
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+//authentication
+const session = require("express-session");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const bcryptjs = require('bcryptjs');
+const MongoStore =require('connect-mongo');
+
+require("dotenv").config();
 
 var app = express();
 
-// view engine setup
+// ------------	view engine setup	--------------------------
 app.engine('handlebars', xhbs.engine({
   extname : "hbs",
   defaultLayout : false,
   layoutsDir : path.join(__dirname, "views"),
   partialsDir: path.join(__dirname, "views/partials"),
 }));
-// expressHandlebars.registerPartials(__dirname + '/views/partials')
 app.set('view engine', 'handlebars');
-// app.engine('handlebars', xhbs.engine({
-// 	extname : "hbs",
-// 	defaultView: 'index',
-// 	defaultLayout : 'main',
-// 	layoutsDir : "views/layouts",
-// 	// partialsDir: path.join(__dirname, "views/partials"),
-// }));
-
-// app.set('view engine', 'handlebars');
 app.set('views','views');
+
+
 
 app.use(logger('dev'));
 app.use(express.json());
@@ -38,28 +35,147 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-//set up rate limit
-// var RateLimit = require('express-rate-limit');
-// var limiter = RateLimit({
-//   windowMs: 1*60*1000,
-//   max:20,
-// });
-// app.use(limiter);
 
+
+// set up rate limit
+var RateLimit = require('express-rate-limit');
+var limiter = RateLimit({
+  windowMs: 1*60*1000,
+  max:20,
+});
+app.use(limiter);
+
+
+app.use(express.urlencoded({ extended: false }));
+
+
+
+//-------------	Connect to database	--------------------------
+
+const mongoose = require("mongoose");
+mongoose.Promise = global.Promise;
+const connect = async () => {
+	mongoose.connect(process.env.MONGODB_AUTH, {
+		useNewUrlParser: true,
+		useUnifiedTopology:true
+	});
+	const db = mongoose.connection;
+	db.on("error", () => {
+		console.log("could not connect");
+	});
+	db.once("open", () => {
+		console.log("> Successfully connected to database");
+	});
+}
+
+connect();
+
+// -----------------	PASSPORT SETUP	-----------------------------------
+//helper function for checking if password is correct
+const isValidPassword = (user, InputPassword) => {
+	const compareHash = bcryptjs.hash(InputPassword, process.env.SALT_ROUNDS);
+	return bcryptjs.compare(user.hash, compareHash);
+}
+
+passport.use(
+	"local-signup",
+	new LocalStrategy(
+		(username, password, done) => {
+			//check if user exists
+			User.findOne({username: username})
+			.then((user) => {
+				if (user) return done(null, false);
+				if (!user) {
+					return done(null, false, {message: "Incorrect username" });
+				}
+				if (!isValidPassword(user, password)) {
+					return done(null, false, {message: "Incorrect passwordd" });
+				}
+				return done(null, user); //successful login
+			})
+			.catch ((err) => {
+				return done(err);
+			});
+	})
+);
+passport.use(
+	"local-login",
+	new LocalStrategy(
+		(username, password, done) => {
+			//check if user exists
+			User.findOne({username: username})
+			.then((user) => {
+				if (!user) {
+					return done(null, false, {message: "Incorrect username" });
+				}
+				if (!isValidPassword(user, password)) {
+					return done(null, false, {message: "Incorrect passwordd" });
+				}
+				return done(null, user); //successful login
+			})
+			.catch ((err) => {
+				return done(err);
+			});
+	})
+);
+passport.serializeUser(function(user, done) {
+	done(null, user.id);
+});
+
+passport.deserializeUser(async function(id, done) {
+	try {
+		const user = await User.findById(id);
+		done(null, user);
+	} catch (err) {
+		done(err);
+	}
+});
+
+
+// ------------------	SESSION SETUP	-------------------------------
+
+
+// const sessionStore = MongoStore.create({mongooseConnection: connection, collection: 'sessions'});
+
+//authentication
+app.use(session({ 
+	secret: process.env.SECRET, 
+	resave: false, 
+	saveUninitialized: true,
+	// store: sessionStore,
+	cookie: {
+		maxAge: 1000 * 30
+	}
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+
+// //make user variable available to whole app
+// app.use(function(req, res, next) {
+//     res.locals.currentUser = req.user;
+//     next();
+// });
+
+// -------------------------	ROUTES	---------------------------------
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const loginRouter = require('./routes/login');
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/login', loginRouter);
 
 
 
-//__________________setup mongoose  _________________________
-const mongoose = require("mongoose");
-mongoose.set('strictQuery', false);
-const mongoDB = process.env.MONGODB_AUTH;
 
-main().catch(err => console.log(err));
-async function main() {
-  await mongoose.connect(mongoDB);
-}
+// mongoose.set('strictQuery', false);
+// const mongoDB = process.env.MONGODB_AUTH;
+
+// main().catch(err => console.log(err));
+// async function main() {
+//   await mongoose.connect(mongoDB);
+// }
 
 
 // catch 404 and forward to error handler

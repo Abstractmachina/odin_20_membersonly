@@ -1,6 +1,8 @@
+require("dotenv").config();
+
 const User = require('../models/user');
 const {body, validationResult} = require ('express-validator');
-
+const bcrypt = require('bcryptjs');
 exports.user_create_get = (req, res, next) => {
 	res.render('signup-form')
     // res.send("NOT IMPLEMENTED: Create User GET");
@@ -55,11 +57,19 @@ exports.user_create_post = [
 			return;
 		}
 
-		const user = new User({
-			firstname: req.body.firstName,
-			lastName: req.body.lastname,
-			password_temp
-		})
+		bcrypt.hash(req.body.password, process.env.SALT_ROUND).then((hash) => {
+			const user = new User({
+				firstname: req.body.firstName,
+				lastName: req.body.lastName,
+				userName: req.body.userName,
+				password: hash,
+			});
+			user.save().then((response) => {
+				res.render("index");
+			});
+		});
+
+		
 	}
 ];
 
