@@ -35,12 +35,8 @@ exports.user_create_post = [
 	body('password', "Invalid Password"),
 	(req, res, next) => {
 		const errors = validationResult(req);
-		console.log("dddddd");
-
+		
 		if (!errors.isEmpty()) {
-		console.log("dddddd2");
-
-			console.log(errors);
 			res.render("signup-form", {
 				title: "Create User",
 				user: req.body,
@@ -48,30 +44,26 @@ exports.user_create_post = [
 			});
 			return;
 		}
-
-		const user = new User({
-			firstName: req.body.firstName,
-			lastName: req.body.lastName,
-			username: req.body.username,
-			password: req.body.password,
-			isMember: false,
-		});
-		user.save()
-		.then((response) => {
-			res.render("index");
-		});
+		next();
+		//tghis works
+		// const user = new User({
+		// 	firstName: req.body.firstName,
+		// 	lastName: req.body.lastName,
+		// 	username: req.body.username,
+		// 	password: req.body.password,
+		// 	isMember: false,
+		// });
+		// user.save()
+		// .then((response) => {
+		// 	res.render("index");
+		// });
 		
-
-		// passport.authenticate('local-signup', {session: false}),
-		// (req, res, next) => {
-		// 	console.log("user saved");
-		// 	console.log(user);
-		// 	res.json({
-		// 		user: req.user,
-		// 	})
-		// }
-		
-	}
+	},
+	passport.authenticate('local-signup', {
+		successRedirect: '/',
+		failureRedirect: '/login',
+		failureFlash: true,
+	})
 ];
 
 exports.user_login_get = (req, res, next) => {
@@ -80,4 +72,9 @@ exports.user_login_get = (req, res, next) => {
 
 exports.user_login_post = (req, res, next) => {
     res.send("NOT IMPLEMENTED: Login User POST");
+}
+
+//for testing
+exports.auth_test_get = (req, res, next) => {
+	res.send("user authenticated.");
 }

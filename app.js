@@ -13,6 +13,8 @@ const LocalStrategy = require("passport-local").Strategy;
 const bcryptjs = require('bcryptjs');
 const MongoStore =require('connect-mongo');
 
+const User = require('./models/user');
+
 require("dotenv").config();
 
 var app = express();
@@ -80,22 +82,42 @@ const isValidPassword = (user, InputPassword) => {
 passport.use(
 	"local-signup",
 	new LocalStrategy(
-		(username, password, done) => {
-			//check if user exists
+		{
+			passReqToCallback: true,
+		},	
+		(req, username, password, done) => {
+			process.nextTick(() => {
+				//check if user exists
 			User.findOne({username: username})
 			.then((user) => {
 				if (user) return done(null, false);
-
+				
 				//create new user
-				User.create({username, password })
+				const newUser = new User({
+					firstName: req.body.firstName,
+					lastName: req.body.lastName,
+					username: username,
+					password: password,
+					isMember: false,
+				});
+				console.log("dddddd");
+				console.log(newUser);
+				newUser.save()
 				.then((user) => {
 					return done(null, user);
 				});
+
+
+				// User.create({username, password })
+				// .then((user) => {
+				// 	return done(null, user);
+				// });
 			})
 			.catch ((err) => {
 				console.log(err);
 				return done(err);
 			});
+		});	
 	})
 );
 passport.use(
@@ -164,8 +186,8 @@ app.use(passport.session());
 
 // -------------------------	ROUTES	---------------------------------
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
-const loginRouter = require('./routes/login');
+// const usersRouter = require('./routes/users');
+// const loginRouter = require('./routes/login');
 app.use('/', indexRouter);
 // app.use('/users', usersRouter);
 // app.use('/login', loginRouter);
@@ -199,5 +221,12 @@ app.use(function(err, req, res, next) {
 	// res.send("error");
 	console.log(err.message);
 });
+
+exports.isLoggedIn = (req, res, next) => {
+	//if user is authenticated, carry on
+	if (req.user) return next();
+	//if not, redirect to login page.
+	else res.redirect('/login');
+}
 
 module.exports = app;
