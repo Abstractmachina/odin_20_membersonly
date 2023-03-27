@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const bcryptjs = require("bcryptjs");
+const bcrypt = require("bcryptjs");
 
 const UserSchema = new Schema({
     firstName: {type: String, required: true, maxLength: 100},
@@ -17,8 +17,8 @@ UserSchema.pre('save', async function(next) {
         //only need to hash new passwords, so if unmodified, skip.
         if (!user.isModified('password')) next();
         
-        const salt = await bcryptjs.genSalt(parseInt(process.env.SALT_ROUNDS));
-        const hashedPassword = await bcryptjs.hash(this.password, salt);
+        const salt = await bcrypt.genSalt(parseInt(process.env.SALT_ROUNDS));
+        const hashedPassword = await bcrypt.hash(this.password, salt);
 
         this.password = hashedPassword;
         next();
@@ -27,9 +27,10 @@ UserSchema.pre('save', async function(next) {
     }
 });
 
-UserSchema.methods.matchPassword = async function(password) {
+UserSchema.methods.validPassword = async function(password) {
 	try {
-		return await bcryptjs.compare(password, this.password);
+        console.log("... comparing passwords ")
+		return await bcrypt.compare(password, this.password);
 	} catch (err) {
 		throw new Error(err);
 	}

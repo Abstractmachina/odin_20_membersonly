@@ -2,12 +2,16 @@
 
 <h1>Log In</h1>
 
-<form method="POST" action="">
+{{#if loginMessage}}
+    <p>{{loginMessage}}</p>
+{{/if}}
+
+<form method="POST" action="/login">
     <label for="username">Username:</label>
-    <input type="text" required=true/>
+    <input type="text" name="username" required=true/>
     
     <label for="password">Password:</label>
-    <input type="password" required=true />
+    <input type="password" name="password" required=true />
 
     <button type="submit">Log In</button>
 </form>
