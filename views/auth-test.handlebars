@@ -1,2 +1,21 @@
+{{ > navigation }}
+
 <h1>Authentication Test</h1>
 
+<h2>User Profile</h2>
+
+{{#if user}}
+    <p>
+        <span>First Name: </span> <span>{{user.firstName}}</span>
+    </p>
+    <p>
+        <span>Last Name: </span> <span>{{user.lastName}}</span>
+    </p>
+    <p>
+        <span>Username: </span> <span>{{user.username}}</span>
+    </p>
+    <p>
+        <span>Member Status: </span> <span>{{user.isMember}}</span>
+    </p>
+
+{{/if}}

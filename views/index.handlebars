@@ -9,4 +9,8 @@
     {{/each}}
 </div>
 
-<a href="/new">Add Message</a>
+{{#if user}}
+    <p>User Logged In</p>
+{{/if}}
+
+<a href="/newMessage">Add Message</a>

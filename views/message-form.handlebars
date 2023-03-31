@@ -1,0 +1,12 @@
+{{> navigation }}
+
+<h1>New Message</h1>
+
+{{#if user}}
+    <form method="POST" action="/newMessage">
+        <textarea id="messageContent" name="messageContent" rows="10" cols="60" placeholder="Write your message here">
+        </textarea>
+        <button type="submit">Post Message</button> 
+    </form>
+    <a href="/">Cancel</a>
+{{/if}}

@@ -3,6 +3,8 @@ const Schema = mongoose.Schema;
 
 const bcrypt = require("bcryptjs");
 
+require('dotenv').config();
+
 const UserSchema = new Schema({
     firstName: {type: String, required: true, maxLength: 100},
     lastName: {type: String, required: true, maxLength: 100},
@@ -34,6 +36,15 @@ UserSchema.methods.validPassword = async function(password) {
 	} catch (err) {
 		throw new Error(err);
 	}
+}
+
+UserSchema.methods.becomeMember = (accessCode) => {
+    if (accessCode === process.env.MEMBER_ACCESS_CODE) {
+        this.isMember = true;
+        console.log(`isMember is now: ${this.isMember}`);
+        return true;
+    }
+    return false;
 }
 
 UserSchema.virtual("url").get(function() {

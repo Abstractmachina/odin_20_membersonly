@@ -6,6 +6,10 @@
     <p>{{loginMessage}}</p>
 {{/if}}
 
+{{#if errorMessage}}
+    <p>{{errorMessage}}</p>
+{{/if}}
+
 <form method="POST" action="/login">
     <label for="username">Username:</label>
     <input type="text" name="username" required=true/>

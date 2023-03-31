@@ -61,8 +61,6 @@ exports.user_login_get = (req, res, next) => {
 
 exports.user_login_post = [
 	(req, res, next) => {
-		console.log("dddddd")
-		console.log(req.body);
 		next();
 	},
 	passport.authenticate('local-login', {
@@ -79,7 +77,45 @@ exports.user_logout = (req, res, next) => {
 	});
 }
 
+exports.member_signup_get = (req, res, next) => {
+	res.render('member-form');
+}
+
+exports.member_signup_post = async (req, res, next) => {
+	try{
+		const user = req.user;
+		//user is not logged in
+		if (!user) {
+			res.redirect('/login');
+		}
+		console.log(user);
+		console.log(req.body.accessCode);
+	
+		if (req.body.accessCode == process.env.MEMBER_ACCESS_CODE) {
+			console.log("correct!");
+
+			user.isMember = true;
+			await user.save();
+			res.redirect('/');
+	
+		}
+		// if (req.user.becomeMember(req.body.accessCode)){
+		// 	//member access was successful. redirect to homepage to see full msg status
+		// 	req.user.save();
+		// 	res.redirect('/');
+			
+		// }
+		//incorrect access code
+		else {res.redirect('/member')}
+
+	} catch(err) {
+
+	}
+}
+
 //for testing
 exports.auth_test_get = (req, res, next) => {
-	res.send("user authenticated.");
+	const user = req.user;
+	console.log(user);
+	res.render('auth-test', {user: req.user.toJSON()}); //need to convert to json object first to read, as mongoose models are classes.
 }

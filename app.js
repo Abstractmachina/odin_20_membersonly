@@ -126,32 +126,18 @@ passport.use("local-login", new LocalStrategy(
 		passReqToCallback:true,
 	},
 	(req, username, password, done) => {
-		console.log("dddddddd");
 		//check if user exists
 		User.findOne({username: username})
 		.then((user) => {
 			if (!user) {
-				 console.log("username didnt match")
 				return done(null, false, req.flash('loginMessage', "Incorrect username") );
 			}
-			// const isMatch = user.matchPassword(password);
-			// isMatch.then(() => {
-			// 	if (!this) {
-			// 		return done(null, false, {message: "Incorrect passwordd" });
-			// 	}
-			// 	return done(null, user);
-			// });
-			console.log(user);
 			if (!user.validPassword(password)){
-				console.log("password did not match")
 				return done(null, false, req.flash('loginMessage', "Incorrect password") );
 			}
-			console.log("password matched")
-
 			return done(null, user);
 		})
 		.catch ((err) => {
-			console.log(err);
 			return done(err);
 		});
 	})
@@ -228,12 +214,12 @@ app.use(function(err, req, res, next) {
 	// set locals, only providing error in development
 	res.locals.message = err.message;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
-
+	console.log(err.message);
 	// render the error page
 	res.status(err.status || 500);
-	  res.render('error2', {message: err.message});
+	res.render('error2', {message: err.message});
 	// res.send("error");
-	console.log(err.message);
+	
 });
 
 module.exports = app;

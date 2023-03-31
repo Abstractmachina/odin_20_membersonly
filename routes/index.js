@@ -11,10 +11,11 @@ var router = express.Router();
 }
 
 const userController = require("../controllers/userController");
+const messageController = require("../controllers/messageController");
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.render('index', { title: 'Express' , user: req.user});
 });
 
 router.get('/signup', userController.user_create_get);
@@ -26,5 +27,12 @@ router.post('/login', userController.user_login_post);
 router.get('/auth-test', isLoggedIn, userController.auth_test_get);
 
 router.get('/logout', userController.user_logout);
+
+router.get('/member', userController.member_signup_get);
+router.post('/member', userController.member_signup_post);
+
+router.get('/newMessage', messageController.message_create_get);
+router.post('/newMessage', messageController.message_create_post);
+
 
 module.exports = router;
